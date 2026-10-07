@@ -122,13 +122,13 @@ jobs:
           nohup python3 -c "from api.server import serve; serve(host='0.0.0.0')" &
           sleep 3
 
-      - name: OWASP ZAP Baseline Scan
+            - name: OWASP ZAP Baseline Scan
         if: ${{ github.event.inputs.fail_demo != 'true' }}
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: "http://localhost:5000/health"
           fail_action: false
-
+          allow_issue_writing: false
   # ---------------------------------------------------------------
   # Stage 6: Deploy (simulated) - only reached if every gate above passed
   # ---------------------------------------------------------------
