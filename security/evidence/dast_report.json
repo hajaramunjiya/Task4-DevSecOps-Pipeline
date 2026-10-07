@@ -1,0 +1,27 @@
+[
+  {
+    "check": "security-headers",
+    "passed": true,
+    "detail": "all required headers present"
+  },
+  {
+    "check": "server-banner-disclosure",
+    "passed": true,
+    "detail": "Server header: ''"
+  },
+  {
+    "check": "path-traversal",
+    "passed": true,
+    "detail": "status=400, body={\"error\":\"invalid input_path\"}\n"
+  },
+  {
+    "check": "injection-in-path-param",
+    "passed": true,
+    "detail": "status=400, body={\"error\":\"zone_id must be numeric\"}\n"
+  },
+  {
+    "check": "debug-console-disclosure",
+    "passed": true,
+    "detail": "status=400, no debugger markup"
+  }
+]

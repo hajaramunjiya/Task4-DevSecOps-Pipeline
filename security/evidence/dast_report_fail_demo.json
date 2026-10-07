@@ -1,0 +1,27 @@
+[
+  {
+    "check": "security-headers",
+    "passed": false,
+    "detail": "missing: ['X-Content-Type-Options', 'X-Frame-Options', 'Content-Security-Policy']"
+  },
+  {
+    "check": "server-banner-disclosure",
+    "passed": false,
+    "detail": "Server header: 'Werkzeug/3.1.9 Python/3.14.5'"
+  },
+  {
+    "check": "path-traversal",
+    "passed": true,
+    "detail": "skipped - insecure twin has no /run route"
+  },
+  {
+    "check": "injection-in-path-param",
+    "passed": false,
+    "detail": "status=500, body=<!doctype html>\n<html lang=en>\n  <head>\n    <title>AttributeError: &#39;int&#39; object has no attribute &#39;isdigit&#39;\n // Werkzeug Debugger</titl"
+  },
+  {
+    "check": "debug-console-disclosure",
+    "passed": false,
+    "detail": "interactive debugger exposed in response"
+  }
+]

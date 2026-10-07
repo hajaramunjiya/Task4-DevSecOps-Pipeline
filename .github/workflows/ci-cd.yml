@@ -1,0 +1,139 @@
+name: DevSecOps CI/CD Pipeline
+
+# Runs on every push and PR, and can be triggered manually to demonstrate
+# the fail-demo path without needing a real insecure commit on main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      fail_demo:
+        description: "Run the deliberately vulnerable fail-demo path instead of the real app"
+        type: boolean
+        default: false
+
+jobs:
+  # ---------------------------------------------------------------
+  # Stage 1: SCA - are our DEPENDENCIES safe?
+  # ---------------------------------------------------------------
+  sca:
+    name: "1 - SCA (pip-audit)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pip-audit
+      - name: Audit real dependencies
+        if: ${{ github.event.inputs.fail_demo != 'true' }}
+        run: pip-audit -r requirements.txt
+      - name: Audit deliberately vulnerable dependencies (fail demo)
+        if: ${{ github.event.inputs.fail_demo == 'true' }}
+        run: pip-audit -r security/requirements-vulnerable-demo.txt
+
+  # ---------------------------------------------------------------
+  # Stage 2: SAST - is our OWN CODE safe?
+  # ---------------------------------------------------------------
+  sast:
+    name: "2 - SAST (bandit)"
+    needs: sca
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install bandit
+      - name: Scan real source (src/, api/)
+        if: ${{ github.event.inputs.fail_demo != 'true' }}
+        run: bandit -r src api -ll
+      - name: Scan including the insecure demo code (fail demo)
+        if: ${{ github.event.inputs.fail_demo == 'true' }}
+        run: bandit -r src api security/fail_demo -ll
+
+  # ---------------------------------------------------------------
+  # Stage 3: Unit & integration tests - is the app CORRECT?
+  # ---------------------------------------------------------------
+  test:
+    name: "3 - Unit & integration tests (pytest)"
+    needs: sast
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python3 -m pytest tests/ -v --junitxml=pytest-results.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pytest-results
+          path: pytest-results.xml
+
+  # ---------------------------------------------------------------
+  # Stage 4: Build - does it package and import cleanly?
+  # ---------------------------------------------------------------
+  build:
+    name: "4 - Build"
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+      - run: python3 -c "import api.server; import src.pipeline; print('build OK')"
+
+  # ---------------------------------------------------------------
+  # Stage 5: DAST - is the RUNNING app safe?
+  # Runs our portable dynamic scanner (security/dast_scan.py) AND the
+  # industry-standard OWASP ZAP baseline scan against the same live
+  # instance, for defence in depth - either one failing fails the stage.
+  # ---------------------------------------------------------------
+  dast:
+    name: "5 - DAST (custom scanner + OWASP ZAP baseline)"
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt
+
+      - name: Run portable DAST scanner (real app)
+        if: ${{ github.event.inputs.fail_demo != 'true' }}
+        run: python3 security/dast_scan.py
+
+      - name: Run portable DAST scanner (fail demo - insecure twin)
+        if: ${{ github.event.inputs.fail_demo == 'true' }}
+        run: python3 security/dast_scan.py --fail-demo
+
+      - name: Start app for OWASP ZAP baseline scan
+        if: ${{ github.event.inputs.fail_demo != 'true' }}
+        run: |
+          nohup python3 -c "from api.server import serve; serve(host='0.0.0.0')" &
+          sleep 3
+
+      - name: OWASP ZAP Baseline Scan
+        if: ${{ github.event.inputs.fail_demo != 'true' }}
+        uses: zaproxy/action-baseline@v0.12.0
+        with:
+          target: "http://localhost:5000/health"
+          fail_action: true
+
+  # ---------------------------------------------------------------
+  # Stage 6: Deploy (simulated) - only reached if every gate above passed
+  # ---------------------------------------------------------------
+  deploy:
+    name: "6 - Deploy (simulated)"
+    needs: dast
+    if: ${{ github.event.inputs.fail_demo != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "All DevSecOps gates passed - this is where a real deploy step would run."

@@ -1,0 +1,22 @@
+DevSecOps pipeline starting - mode: --fail-demo
+
+##################################################
+# STAGE: 1/5 SCA (Software Composition Analysis)
+##################################################
+=== SCA (pip-audit) - FAIL DEMO: scanning a deliberately vulnerable dependency pin ===
+Found 4 known vulnerabilities in 1 package
+Name   Version ID             Fix Versions
+------ ------- -------------- ------------
+pyyaml 5.3     PYSEC-2020-96  5.3.1
+pyyaml 5.3     PYSEC-2021-142 5.4
+pyyaml 5.3     PYSEC-2021-142 5.4
+pyyaml 5.3     PYSEC-2020-96  5.3.1
+
+SCA RESULT: FAIL - one or more dependencies have a published CVE/advisory.
+A CI/CD pipeline stops here: the build stage never runs.
+
+PIPELINE STOPPED: stage '1/5 SCA (Software Composition Analysis)' failed (exit 1). Later stages did not run.
+ - one or more dependencies have a published CVE/advisory.
+A CI/CD pipeline stops here: the build stage never runs.
+
+PIPELINE STOPPED: stage '1/5 SCA (Software Composition Analysis)' failed (exit 1). Later stages did not run.

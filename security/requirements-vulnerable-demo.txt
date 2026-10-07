@@ -1,0 +1,6 @@
+# INTENTIONALLY VULNERABLE - for demonstrating a FAILING SCA scan only.
+# Not installed by the application; referenced only by security/run_sca.sh
+# in its "fail demo" mode. pyyaml 5.3 has real, published CVEs
+# (PYSEC-2020-96, PYSEC-2021-142) fixed in 5.4 - verified live against the
+# OSV advisory database in execution_evidence.log.
+pyyaml==5.3

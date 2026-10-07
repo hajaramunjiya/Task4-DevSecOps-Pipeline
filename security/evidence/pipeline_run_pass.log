@@ -1,0 +1,110 @@
+DevSecOps pipeline starting - mode: normal
+
+##################################################
+# STAGE: 1/5 SCA (Software Composition Analysis)
+##################################################
+=== SCA (pip-audit) - scanning requirements.txt ===
+No known vulnerabilities found
+
+SCA RESULT: PASS - no known vulnerabilities in any pinned dependency.
+
+##################################################
+# STAGE: 2/5 SAST (Static Application Security Testing)
+##################################################
+=== SAST (bandit) - scanning src api ===
+[main]	INFO	profile include tests: None
+[main]	INFO	profile exclude tests: None
+[main]	INFO	cli include tests: None
+[main]	INFO	cli exclude tests: None
+[main]	INFO	running on Python 3.13.16
+Run started:2026-10-07 03:09:11.674506+00:00
+
+Test results:
+	No issues identified.
+
+Code scanned:
+	Total lines of code: 369
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 0
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 0
+		High: 0
+Files skipped (0):
+
+SAST RESULT: PASS - no medium/high severity findings in scanned source.
+
+##################################################
+# STAGE: 3/5 Unit and integration tests
+##################################################
+============================= test session starts ==============================
+platform linux -- Python 3.13.16, pytest-9.1.1, pluggy-1.6.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/claude/task4_extract
+plugins: anyio-4.15.1
+collecting ... collected 21 items
+
+tests/test_analytics.py::test_hourly_counts_match_controlled_sample PASSED [  4%]
+tests/test_analytics.py::test_by_zone_totals_match_controlled_sample PASSED [  9%]
+tests/test_analytics.py::test_summary_identifies_peak_hour_and_top_zone PASSED [ 14%]
+tests/test_api.py::test_health_returns_ok PASSED                         [ 19%]
+tests/test_api.py::test_security_headers_present_on_every_response PASSED [ 23%]
+tests/test_api.py::test_run_rejects_path_traversal_attempt PASSED        [ 28%]
+tests/test_api.py::test_run_rejects_missing_input_path PASSED            [ 33%]
+tests/test_api.py::test_zone_rejects_non_numeric_id PASSED               [ 38%]
+tests/test_api.py::test_summary_returns_404_before_any_run PASSED        [ 42%]
+tests/test_liskov_substitution.py::test_both_data_sources_are_interchangeable[ParquetDataSource] PASSED [ 47%]
+tests/test_liskov_substitution.py::test_both_data_sources_are_interchangeable[CsvDataSource] PASSED [ 52%]
+tests/test_liskov_substitution.py::test_both_report_writers_are_interchangeable[CsvJsonReportWriter] PASSED [ 57%]
+tests/test_liskov_substitution.py::test_both_report_writers_are_interchangeable[ParquetReportWriter] PASSED [ 61%]
+tests/test_liskov_substitution.py::test_pipeline_produces_same_summary_regardless_of_source_or_writer PASSED [ 66%]
+tests/test_pipeline.py::test_pipeline_runs_end_to_end_with_fakes_across_multiple_batches PASSED [ 71%]
+tests/test_transform.py::test_transform_derives_pickup_hour_and_date PASSED [ 76%]
+tests/test_validation.py::test_schema_error_raised_when_column_missing PASSED [ 80%]
+tests/test_validation.py::test_invalid_dates_are_removed PASSED          [ 85%]
+tests/test_validation.py::test_invalid_negative_distance_is_removed PASSED [ 90%]
+tests/test_validation.py::test_invalid_negative_fare_is_removed PASSED   [ 95%]
+tests/test_validation.py::test_valid_rows_pass_through_unchanged_in_count PASSED [100%]
+
+============================== 21 passed in 0.94s ==============================
+
+##################################################
+# STAGE: 4/5 Build check (package imports cleanly)
+##################################################
+build OK: all modules import cleanly
+
+##################################################
+# STAGE: 5/5 DAST (Dynamic Application Security Testing)
+##################################################
+=== DAST - attacking a live instance: api/server.py ===
+[PASS] security-headers: all required headers present
+[PASS] server-banner-disclosure: Server header: ''
+[PASS] path-traversal: status=400, body={"error":"invalid input_path"}
+
+[PASS] injection-in-path-param: status=400, body={"error":"zone_id must be numeric"}
+
+[PASS] debug-console-disclosure: status=400, no debugger markup
+
+DAST RESULT: PASS - 5/5 checks passed.
+
+PIPELINE PASSED: all 5 stages green. Safe to deploy.
+ver.py ===
+[PASS] security-headers: all required headers present
+[PASS] server-banner-disclosure: Server header: ''
+[PASS] path-traversal: status=400, body={"error":"invalid input_path"}
+
+[PASS] injection-in-path-param: status=400, body={"error":"zone_id must be numeric"}
+
+[PASS] debug-console-disclosure: status=400, no debugger markup
+
+DAST RESULT: PASS - 5/5 checks passed.
+
+PIPELINE PASSED: all 5 stages green. Safe to deploy.
