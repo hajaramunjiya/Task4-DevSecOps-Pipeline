@@ -4,3 +4,4 @@ numpy>=1.26
 pytest>=8
 flask>=3.0
 waitress>=3.0
+requests 
