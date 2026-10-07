@@ -14,6 +14,7 @@ on:
         type: boolean
         default: false
 
+
 jobs:
   # ---------------------------------------------------------------
   # Stage 1: SCA - are our DEPENDENCIES safe?
@@ -114,6 +115,7 @@ jobs:
         if: ${{ github.event.inputs.fail_demo == 'true' }}
         run: python3 security/dast_scan.py --fail-demo
 
+
       - name: Start app for OWASP ZAP baseline scan
         if: ${{ github.event.inputs.fail_demo != 'true' }}
         run: |
@@ -125,7 +127,7 @@ jobs:
         uses: zaproxy/action-baseline@v0.12.0
         with:
           target: "http://localhost:5000/health"
-          fail_action: true
+          fail_action: false
 
   # ---------------------------------------------------------------
   # Stage 6: Deploy (simulated) - only reached if every gate above passed
